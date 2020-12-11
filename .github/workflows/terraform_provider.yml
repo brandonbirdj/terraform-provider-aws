@@ -51,6 +51,8 @@ jobs:
     name: go build
     needs: [go_mod_download]
     runs-on: ubuntu-latest
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
