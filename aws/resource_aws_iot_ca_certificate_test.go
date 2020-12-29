@@ -65,9 +65,9 @@ func testAccCheckAWSIoTCACertificateDestroy_basic(s *terraform.State) error {
 
 var testAccAWSIoTCACertificate = `
 resource "aws_iot_ca_certificate" "foo" {
-  ca_certificate    	     = "test"
+  ca_certificate           = "test"
   verification_certificate = "test"
-  active 			             = true
+  active                   = true
   auto_registration        = true
 }
 `
