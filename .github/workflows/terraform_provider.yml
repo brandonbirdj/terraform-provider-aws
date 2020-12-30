@@ -219,7 +219,7 @@ jobs:
 
   golangci-lint:
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
@@ -249,7 +249,7 @@ jobs:
 
   importlint:
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
@@ -303,7 +303,7 @@ jobs:
           args: build --snapshot --timeout 1h
 
   semgrep:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
       with:
@@ -313,7 +313,7 @@ jobs:
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
