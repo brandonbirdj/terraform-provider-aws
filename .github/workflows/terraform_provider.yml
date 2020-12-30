@@ -33,7 +33,7 @@ env:
 jobs:
   go_mod_download:
     name: go mod download
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
