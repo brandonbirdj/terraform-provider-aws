@@ -42,10 +42,10 @@ resource "tls_private_key" "verification" {
   algorithm = "RSA"
 }
 resource "tls_locally_signed_cert" "verification" {
-  cert_request_pem   = tls_cert_request.verification.cert_request_pem
-  ca_private_key_pem = tls_private_key.ca.private_key_pem
-  ca_cert_pem        = tls_self_signed_cert.ca.cert_pem
-  ca_key_algorithm   = "RSA"
+  cert_request_pem      = tls_cert_request.verification.cert_request_pem
+  ca_private_key_pem    = tls_private_key.ca.private_key_pem
+  ca_cert_pem           = tls_self_signed_cert.ca.cert_pem
+  ca_key_algorithm      = "RSA"
   validity_period_hours = 12
   allowed_uses = [
     "key_encipherment",
