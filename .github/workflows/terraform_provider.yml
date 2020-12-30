@@ -33,7 +33,7 @@ env:
 jobs:
   go_mod_download:
     name: go mod download
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
@@ -54,7 +54,7 @@ jobs:
   go_build:
     name: go build
     needs: [go_mod_download]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
@@ -92,7 +92,7 @@ jobs:
   terraform_providers_schema:
     name: terraform providers schema
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     - uses: actions/cache@v2
@@ -127,7 +127,7 @@ jobs:
 
   awsproviderlint:
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
@@ -158,7 +158,7 @@ jobs:
   go_generate:
     name: go generate
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
@@ -191,7 +191,7 @@ jobs:
   go_test:
     name: go test
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     # See also: https://github.com/actions/setup-go/pull/62
@@ -278,7 +278,7 @@ jobs:
 
   goreleaser:
     needs: [go_mod_download]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
       # See also: https://github.com/actions/setup-go/pull/62
