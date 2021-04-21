@@ -51,6 +51,43 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_]{0,38}$`), "must be alphanumeric with max length of 38 characters"),
 			},
+			"signing_material": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// "default_value": {
+						// 	Type:     schema.TypeString,
+						// 	Required: true,
+						// 	ValidateFunc: validation.All(
+						// 		validation.StringLenBetween(1, 256),
+						// 		validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+						// 	),
+						// },
+						"certificate_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+			"signing_parameters": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
 			"signature_validity_period": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -137,6 +174,18 @@ func resourceAwsSignerSigningProfileCreate(d *schema.ResourceData, meta interfac
 			Value: aws.Int64(int64(signatureValidityPeriod["value"].(int))),
 			Type:  aws.String(signatureValidityPeriod["type"].(string)),
 		}
+	}
+
+	if v, exists := d.GetOk("signing_material"); exists {
+		signingMaterial := v.([]interface{})[0].(map[string]interface{})
+		signingProfileInput.SigningMaterial = &signer.SigningMaterial{
+			CertificateArn: aws.String(signingMaterial["certificate_arn"].(string)),
+		}
+	}
+
+	if v, exists := d.GetOk("signing_parameters"); exists {
+		signing_parameters := v.([]interface{})[0].(map[string]*string)
+		signingProfileInput.SigningParameters = signing_parameters
 	}
 
 	if v, exists := d.GetOk("tags"); exists {

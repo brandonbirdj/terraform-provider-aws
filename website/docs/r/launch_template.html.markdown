@@ -12,7 +12,7 @@ Provides an EC2 launch template resource. Can be used to create instances or aut
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_launch_template" "foo" {
   name = "foo"
 
@@ -147,7 +147,7 @@ The following arguments are supported:
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
-* `tags` - (Optional) A map of tags to assign to the launch template.
+* `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
@@ -180,7 +180,7 @@ The `ebs` block supports the following:
 * `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
-* `throughput` - The throughput to provision for a `gp3` volume, with a maximum of 1,000 MiB/s.
+* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g. 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - The size of the volume in gigabytes.
 * `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
 
@@ -350,6 +350,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
 * `latest_version` - The latest version of the launch template.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 

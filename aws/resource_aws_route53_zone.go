@@ -33,10 +33,11 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				// returned from API, no longer requiring custom DiffSuppressFunc;
 				// instead a StateFunc allows input to be provided
 				// with or without the trailing period
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				StateFunc: trimTrailingPeriod,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				StateFunc:    trimTrailingPeriod,
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 
 			"comment": {
@@ -77,6 +78,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"vpc"},
+				ValidateFunc:  validation.StringLenBetween(0, 32),
 			},
 
 			"name_servers": {
@@ -326,7 +328,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 
 	var lastDeleteErr, lastErrorFromWaiter error
 	var pageNum = 0
-	err := conn.ListResourceRecordSetsPages(input, func(page *route53.ListResourceRecordSetsOutput, isLastPage bool) bool {
+	err := conn.ListResourceRecordSetsPages(input, func(page *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
 		sets := page.ResourceRecordSets
 		pageNum += 1
 
@@ -366,7 +368,7 @@ func deleteAllRecordsInHostedZoneId(hostedZoneId, hostedZoneName string, conn *r
 			log.Printf("[DEBUG] Unable to wait for change batch because of an error: %s", lastDeleteErr)
 		}
 
-		return !isLastPage
+		return !lastPage
 	})
 	if err != nil {
 		return fmt.Errorf("Failed listing/deleting record sets: %s\nLast error from deletion: %s\nLast error from waiter: %s",

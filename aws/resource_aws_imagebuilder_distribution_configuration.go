@@ -85,7 +85,6 @@ func resourceAwsImageBuilderDistributionConfiguration() *schema.Resource {
 														Type:         schema.TypeString,
 														ValidateFunc: validateAwsAccountId,
 													},
-													MaxItems: 50,
 												},
 											},
 										},
@@ -275,7 +274,7 @@ func expandImageBuilderAmiDistributionConfiguration(tfMap map[string]interface{}
 	apiObject := &imagebuilder.AmiDistributionConfiguration{}
 
 	if v, ok := tfMap["ami_tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.AmiTags = stringMapToPointers(v)
+		apiObject.AmiTags = expandStringMap(v)
 	}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
