@@ -189,14 +189,28 @@ func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) []interface{} {
 
 func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
 	dcb := &cloudfront.DefaultCacheBehavior{
+		CachePolicyId:          aws.String(m["cache_policy_id"].(string)),
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
-		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
-		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
+		dcb.ForwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	}
+
+	if m["cache_policy_id"].(string) == "" {
+		dcb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
+		dcb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
+		dcb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
+	}
+
+	if v, ok := m["trusted_key_groups"]; ok {
+		dcb.TrustedKeyGroups = expandTrustedKeyGroups(v.([]interface{}))
+	} else {
+		dcb.TrustedKeyGroups = expandTrustedKeyGroups([]interface{}{})
 	}
 
 	if v, ok := m["trusted_signers"]; ok {
@@ -218,20 +232,39 @@ func expandCloudFrontDefaultCacheBehavior(m map[string]interface{}) *cloudfront.
 	if v, ok := m["cached_methods"]; ok {
 		dcb.AllowedMethods.CachedMethods = expandCachedMethods(v.(*schema.Set))
 	}
+	if v, ok := m["realtime_log_config_arn"]; ok && v.(string) != "" {
+		dcb.RealtimeLogConfigArn = aws.String(v.(string))
+	}
 
 	return dcb
 }
 
 func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
+	var forwardedValues *cloudfront.ForwardedValues
+	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
+		forwardedValues = expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
+	}
+
 	cb := &cloudfront.CacheBehavior{
+		CachePolicyId:          aws.String(m["cache_policy_id"].(string)),
 		Compress:               aws.Bool(m["compress"].(bool)),
-		DefaultTTL:             aws.Int64(int64(m["default_ttl"].(int))),
 		FieldLevelEncryptionId: aws.String(m["field_level_encryption_id"].(string)),
-		ForwardedValues:        expandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{})),
-		MaxTTL:                 aws.Int64(int64(m["max_ttl"].(int))),
-		MinTTL:                 aws.Int64(int64(m["min_ttl"].(int))),
+		ForwardedValues:        forwardedValues,
+		OriginRequestPolicyId:  aws.String(m["origin_request_policy_id"].(string)),
 		TargetOriginId:         aws.String(m["target_origin_id"].(string)),
 		ViewerProtocolPolicy:   aws.String(m["viewer_protocol_policy"].(string)),
+	}
+
+	if m["cache_policy_id"].(string) == "" {
+		cb.MinTTL = aws.Int64(int64(m["min_ttl"].(int)))
+		cb.MaxTTL = aws.Int64(int64(m["max_ttl"].(int)))
+		cb.DefaultTTL = aws.Int64(int64(m["default_ttl"].(int)))
+	}
+
+	if v, ok := m["trusted_key_groups"]; ok {
+		cb.TrustedKeyGroups = expandTrustedKeyGroups(v.([]interface{}))
+	} else {
+		cb.TrustedKeyGroups = expandTrustedKeyGroups([]interface{}{})
 	}
 
 	if v, ok := m["trusted_signers"]; ok {
@@ -256,20 +289,30 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	if v, ok := m["path_pattern"]; ok {
 		cb.PathPattern = aws.String(v.(string))
 	}
+	if v, ok := m["realtime_log_config_arn"]; ok && v.(string) != "" {
+		cb.RealtimeLogConfigArn = aws.String(v.(string))
+	}
+
 	return cb
 }
 
 func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
 	m := map[string]interface{}{
+		"cache_policy_id":           aws.StringValue(dcb.CachePolicyId),
 		"compress":                  aws.BoolValue(dcb.Compress),
 		"field_level_encryption_id": aws.StringValue(dcb.FieldLevelEncryptionId),
 		"viewer_protocol_policy":    aws.StringValue(dcb.ViewerProtocolPolicy),
 		"target_origin_id":          aws.StringValue(dcb.TargetOriginId),
 		"min_ttl":                   aws.Int64Value(dcb.MinTTL),
+		"origin_request_policy_id":  aws.StringValue(dcb.OriginRequestPolicyId),
+		"realtime_log_config_arn":   aws.StringValue(dcb.RealtimeLogConfigArn),
 	}
 
 	if dcb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(dcb.ForwardedValues)}
+	}
+	if len(dcb.TrustedKeyGroups.Items) > 0 {
+		m["trusted_key_groups"] = flattenTrustedKeyGroups(dcb.TrustedKeyGroups)
 	}
 	if len(dcb.TrustedSigners.Items) > 0 {
 		m["trusted_signers"] = flattenTrustedSigners(dcb.TrustedSigners)
@@ -299,14 +342,20 @@ func flattenCloudFrontDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior)
 func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 	m := make(map[string]interface{})
 
+	m["cache_policy_id"] = aws.StringValue(cb.CachePolicyId)
 	m["compress"] = aws.BoolValue(cb.Compress)
 	m["field_level_encryption_id"] = aws.StringValue(cb.FieldLevelEncryptionId)
 	m["viewer_protocol_policy"] = aws.StringValue(cb.ViewerProtocolPolicy)
 	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
 	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
+	m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
+	m["realtime_log_config_arn"] = aws.StringValue(cb.RealtimeLogConfigArn)
 
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{flattenForwardedValues(cb.ForwardedValues)}
+	}
+	if len(cb.TrustedKeyGroups.Items) > 0 {
+		m["trusted_key_groups"] = flattenTrustedKeyGroups(cb.TrustedKeyGroups)
 	}
 	if len(cb.TrustedSigners.Items) > 0 {
 		m["trusted_signers"] = flattenTrustedSigners(cb.TrustedSigners)
@@ -333,6 +382,26 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["path_pattern"] = *cb.PathPattern
 	}
 	return m
+}
+
+func expandTrustedKeyGroups(s []interface{}) *cloudfront.TrustedKeyGroups {
+	var tkg cloudfront.TrustedKeyGroups
+	if len(s) > 0 {
+		tkg.Quantity = aws.Int64(int64(len(s)))
+		tkg.Items = expandStringList(s)
+		tkg.Enabled = aws.Bool(true)
+	} else {
+		tkg.Quantity = aws.Int64(0)
+		tkg.Enabled = aws.Bool(false)
+	}
+	return &tkg
+}
+
+func flattenTrustedKeyGroups(tkg *cloudfront.TrustedKeyGroups) []interface{} {
+	if tkg.Items != nil {
+		return flattenStringList(tkg.Items)
+	}
+	return []interface{}{}
 }
 
 func expandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {
@@ -414,6 +483,10 @@ func flattenLambdaFunctionAssociation(lfa *cloudfront.LambdaFunctionAssociation)
 }
 
 func expandForwardedValues(m map[string]interface{}) *cloudfront.ForwardedValues {
+	if len(m) < 1 {
+		return nil
+	}
+
 	fv := &cloudfront.ForwardedValues{
 		QueryString: aws.Bool(m["query_string"].(bool)),
 	}
@@ -508,7 +581,7 @@ func flattenCookieNames(cn *cloudfront.CookieNames) []interface{} {
 func expandAllowedMethods(s *schema.Set) *cloudfront.AllowedMethods {
 	return &cloudfront.AllowedMethods{
 		Quantity: aws.Int64(int64(s.Len())),
-		Items:    expandStringList(s.List()),
+		Items:    expandStringSet(s),
 	}
 }
 
@@ -522,7 +595,7 @@ func flattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
 func expandCachedMethods(s *schema.Set) *cloudfront.CachedMethods {
 	return &cloudfront.CachedMethods{
 		Quantity: aws.Int64(int64(s.Len())),
-		Items:    expandStringList(s.List()),
+		Items:    expandStringSet(s),
 	}
 }
 
@@ -1000,14 +1073,12 @@ func flattenLoggingConfig(lc *cloudfront.LoggingConfig) []interface{} {
 	return []interface{}{m}
 }
 
-func expandAliases(as *schema.Set) *cloudfront.Aliases {
-	s := as.List()
-	var aliases cloudfront.Aliases
-	if len(s) > 0 {
-		aliases.Quantity = aws.Int64(int64(len(s)))
-		aliases.Items = expandStringList(s)
-	} else {
-		aliases.Quantity = aws.Int64(0)
+func expandAliases(s *schema.Set) *cloudfront.Aliases {
+	aliases := cloudfront.Aliases{
+		Quantity: aws.Int64(int64(s.Len())),
+	}
+	if s.Len() > 0 {
+		aliases.Items = expandStringSet(s)
 	}
 	return &aliases
 }
@@ -1098,6 +1169,34 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 		m["minimum_protocol_version"] = *vc.MinimumProtocolVersion
 	}
 	return []interface{}{m}
+}
+
+func flattenCloudfrontActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+	if atkg == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(atkg.Enabled),
+		"items":   flattenCloudfrontKGKeyPairIds(atkg.Items),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCloudfrontKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+	result := make([]interface{}, 0, len(keyPairIds))
+
+	for _, keyPairId := range keyPairIds {
+		m := map[string]interface{}{
+			"key_group_id": aws.StringValue(keyPairId.KeyGroupId),
+			"key_pair_ids": aws.StringValueSlice(keyPairId.KeyPairIds.Items),
+		}
+
+		result = append(result, m)
+	}
+
+	return result
 }
 
 func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
