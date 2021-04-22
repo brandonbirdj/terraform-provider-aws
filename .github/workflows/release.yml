@@ -19,6 +19,11 @@ jobs:
   goreleaser:
     runs-on: self-hosted
     steps:
+      - name: Runner workspace path
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+          mkdir -p "${{ github.workspace }}"
       -
         name: Checkout
         uses: actions/checkout@v2
