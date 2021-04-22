@@ -70,6 +70,7 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 						"certificate_arn": {
 							Type:         schema.TypeString,
 							Required:     false,
+							Optional:     true,
 							ValidateFunc: validateArn,
 						},
 					},
