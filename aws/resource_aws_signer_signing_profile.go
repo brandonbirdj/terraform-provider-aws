@@ -86,6 +86,7 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 						"certname": {
 							Type:         schema.TypeString,
 							Required:     false,
+							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 					},
