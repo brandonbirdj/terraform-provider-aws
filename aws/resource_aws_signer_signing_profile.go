@@ -83,7 +83,7 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validateArn,
+							ValidateFunc: validation.StringInSlice(signer.ValidityType_Values(), false),
 						},
 					},
 				},
