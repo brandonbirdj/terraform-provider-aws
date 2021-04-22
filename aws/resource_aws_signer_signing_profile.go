@@ -33,7 +33,9 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"AWSLambda-SHA384-ECDSA"},
+					"AWSLambda-SHA384-ECDSA",
+					"AmazonFreeRTOS-Default",
+				},
 					false),
 			},
 			"name": {
@@ -67,7 +69,7 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 						// },
 						"certificate_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Required:     false,
 							ValidateFunc: validateArn,
 						},
 					},
@@ -80,10 +82,10 @@ func resourceAwsSignerSigningProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role_arn": {
+						"certname": {
 							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(signer.ValidityType_Values(), false),
+							Required:     false,
+							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
 					},
 				},
